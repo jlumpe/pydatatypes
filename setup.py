@@ -19,5 +19,6 @@ setup(
 	author_email='mjlumpe@gmail.com',
 	packages=find_packages(),
 	install_requires=[
+		'attrs>=17.3',
 	],
 )
