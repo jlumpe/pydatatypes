@@ -160,6 +160,9 @@ def field_from_json(field, data):
 	:param data: JSON data from :func:`json.load`.
 	:returns: Converted value suitable for initialization of attribute.
 	"""
+	if data is None and field.metadata['optional']:
+		return None
+
 	return from_json(data, field.type)
 
 
