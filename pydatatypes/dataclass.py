@@ -57,7 +57,7 @@ def field(type=None,
           convert_type=True,
           json=True,
           set_default_optional=True,
-          **kwargs,
+          **kwargs
 	):
 	"""Slightly extended verions of :func:`attr.attrib`.
 
