@@ -1,6 +1,6 @@
 """Test conversion to non-parametrized types in pydatatypes.typing module."""
 
-from typing import Any, List, Dict, Collection, Mapping, Sequence
+from typing import Any, List, Dict, Mapping, Sequence
 from collections import OrderedDict
 
 import pytest
@@ -157,7 +157,7 @@ def test_is_collection_type(converter):
 
 	from collections import OrderedDict
 
-	types = [list, List, dict, Dict, Sequence, Mapping, Collection]
+	types = [list, List, dict, Dict, Sequence, Mapping]
 
 	values = [[], [1, 2], range(3), dict(x=3), OrderedDict(), set()]
 

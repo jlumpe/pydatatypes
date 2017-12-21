@@ -19,7 +19,7 @@ import typing
 import numbers
 
 from .abc import Jsonable, JsonConstructible
-from .typing import TypeConversionError, TypeConverter, NoneType
+from .typing import TypeConversionError, TypeConverter, NoneType, is_collection_type
 
 
 __all__ = ['JsonTypeError', 'to_json', 'from_json']
@@ -114,7 +114,7 @@ class JsonConverter:
 			return self._mapping_to_json(value, path)
 
 		# Generic non-mapping collection
-		if isinstance(value, typing.Collection):
+		if is_collection_type(type(value)):
 			return [
 				self._to_json(v, path + (i,))
 				for i, v in enumerate(value)

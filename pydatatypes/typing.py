@@ -116,6 +116,28 @@ def is_union_type(type_):
 	return isinstance(type_, type(typing.Union))
 
 
+def is_collection_type(type_):
+	"""Check if a type is a collection (sized, iterable, container).
+
+	3.6 has :class:`typing.Collection` and :class:`collection.abc.Collection`,
+	3.5 doesn't.
+
+	>>> is_collection_type(list)
+	True
+
+	>>> is_collection_type(dict)
+	True
+
+	# Generators are iterable but not sized
+	>>> generator = (x**2 for x in range(10))
+	>>> is_collection_type(type(generator))
+	False
+	"""
+	return issubclass(type_, typing.Sized) and \
+		issubclass(type_, typing.Iterable) and \
+		issubclass(type_, typing.Container)
+
+
 class _TypeHandler:
 	"""Converts to and performs instance checks for a specific set of types.
 
@@ -288,7 +310,7 @@ class _DictTypeHandler(_MappingTypeHandler):
 
 
 class _CollectionTypeHandler(_TypeHandler):
-	"""Non-mapping subclass of :class:`Collection`."""
+	"""Non-mapping subclass of :class:`typing.Collection`."""
 
 	def isinstance(self, value, type_, path):
 		base = type_.__origin__ or type_
@@ -526,7 +548,7 @@ class TypeConverter(_TypeHandler):
 			return self._find_sequence_handler(type_)
 
 		# Other collection type
-		if issubclass(base, typing.Collection):
+		if is_collection_type(base):
 			return self._find_collection_handler(type_)
 
 		return None
