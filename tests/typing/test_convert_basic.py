@@ -5,8 +5,9 @@ from collections import OrderedDict
 
 import pytest
 
-from pydatatypes.typing import TypeConversionError, NoneType
-from pydatatypes.test import assert_convert_success, assert_convert_failure
+from pydatatypes.typing import NoneType, TypeConversionError
+from pydatatypes.test import assert_convert_success, assert_convert_failure, ExampleValues
+
 
 
 # Quick examples for type checking and conversion (mutually exclusive partitions)
@@ -29,136 +30,104 @@ EXAMPLE_ALIASES = {
 }
 
 
-def expand_example_aliases(keys):
-	keys = set(keys)
-
-	for key in list(keys):
-		try:
-			alias_keys = EXAMPLE_ALIASES[key]
-		except KeyError:
-			continue
-
-		keys.remove(key)
-		keys.update(alias_keys)
-
-	return keys
-
-
-def iter_example_values(keys, complement=False):
-	keys = expand_example_aliases(keys)
-
-	if complement:
-		keys = EXAMPLES.keys() - keys
-
-	for key in keys:
-		yield from EXAMPLES[key]
-
-
-def check_convert_examples(converter, type_, keys, *, omit=None, eq=True):
+def check_convert(examples, converter, type_, keys, *, omit=None, eq=True):
 	"""
 	Check conversion of all example values to type_. Examples from keys in
-	"keys" are expected to work, the others are expected to fail.
+	keys are expected to work, the others are expected to fail.
 	"""
-
-	keys = expand_example_aliases(keys)
-	omit = expand_example_aliases(omit or [])
-
 	# Expected to work
-	for val in iter_example_values(keys):
+	for val in examples.values(keys, omit=omit):
 		assert_convert_success(converter, val, type_, eq=eq)
 
 	# Expected to fail
-	for val in iter_example_values(EXAMPLES.keys() - keys - omit):
+	for val in examples.values(keys, complement=True, omit=omit):
 		assert_convert_failure(converter, val, type_)
 
-
-def check_isinstance_examples(converter, type_, keys, *, omit=None, eq=True):
+def check_isinstance(examples, converter, type_, keys, *, omit=None):
 	"""
 	Test instance checking for all example values to type_. Examples from keys
 	in "keys" are expected to work, the others are expected to fail.
 	"""
 
-	keys = expand_example_aliases(keys)
-	omit = expand_example_aliases(omit or [])
-
 	# Expected to work
-	for val in iter_example_values(keys):
+	for val in examples.values(keys, omit=omit):
 		assert converter.isinstance(val, type_)
 		converter.ensure_isinstance(val, type_)
 
 	# Expected to fail
-	for val in iter_example_values(EXAMPLES.keys() - keys - omit):
+	for val in examples.values(keys, complement=True, omit=omit):
 		assert not converter.isinstance(val, type_)
 
 		with pytest.raises(TypeConversionError):
 			converter.ensure_isinstance(val, type_)
 
 
-def test_any(converter):
-	check_isinstance_examples(converter, Any, ['all'])
+@pytest.fixture()
+def examples():
+	return ExampleValues(EXAMPLES, EXAMPLE_ALIASES)
+
+
+def test_any(converter, examples):
+	check_isinstance(examples, converter, Any, ['all'])
 
 	# Conversion should return exact same object
-	for value in iter_example_values(['all']):
+	for value in examples.values(['all']):
 		assert converter.convert(value, Any) is value
 
 
-def test_none(converter):
-	check_isinstance_examples(converter, NoneType, ['none'])
-	check_convert_examples(converter, NoneType, ['none'])
+def test_none(converter, examples):
+	check_isinstance(examples, converter, NoneType, ['none'])
+	check_convert(examples, converter, NoneType, ['none'])
 
 
-def test_int(converter):
-	check_isinstance_examples(converter, int, ['int', 'bool'])
-	check_convert_examples(converter, int, ['int', 'bool'])
+def test_int(converter, examples):
+	check_isinstance(examples, converter, int, ['int', 'bool'])
+	check_convert(examples, converter, int, ['int', 'bool'])
 
 
-def test_float(converter):
-	check_isinstance_examples(converter, float, ['float'])
-	check_convert_examples(converter, float, ['float'], omit=['int', 'bool'])
+def test_float(converter, examples):
+	check_isinstance(examples, converter, float, ['float'])
+	check_convert(examples, converter, float, ['float'], omit=['int', 'bool'])
 
 
-def test_bool(converter):
-	check_isinstance_examples(converter, bool, ['bool'])
-	check_convert_examples(converter, bool, ['bool'])
+def test_bool(converter, examples):
+	check_isinstance(examples, converter, bool, ['bool'])
+	check_convert(examples, converter, bool, ['bool'])
 
 
-def test_str(converter):
-	check_isinstance_examples(converter, str, ['string'])
-	check_convert_examples(converter, str, ['string'])
+def test_str(converter, examples):
+	check_isinstance(examples, converter, str, ['string'])
+	check_convert(examples, converter, str, ['string'])
 
 
 @pytest.mark.parametrize('type_', [list, List, Sequence])
-def test_convert_list(converter, type_):
+def test_convert_list(converter, examples, type_):
 
 	# Check conversion failure on all non-sequences
-	check_convert_examples(converter, type_, [], omit=['sequence'])
+	check_convert(examples, converter, type_, [], omit=['sequence'])
 
 	# Check sequence conversion
-	for value in iter_example_values(['sequence']):
+	for value in examples.values(['sequence']):
 		converted = converter.convert(value, type_)
 		assert isinstance(converted, list)
 		assert converted == list(value)
 
 
 @pytest.mark.parametrize('type_', [dict, Dict, Mapping])
-def test_convert_dict(converter, type_):
+def test_convert_dict(converter, examples, type_):
 
 	# Check conversion failure on all non-mappings
-	check_convert_examples(converter, type_, [], omit=['mapping'])
+	check_convert(examples, converter, type_, [], omit=['mapping'])
 
 	# Check mapping conversion
-	for value in iter_example_values(['mapping']):
+	for value in examples.values(['mapping']):
 		converted = converter.convert(value, type_)
 		assert isinstance(converted, dict)
 		assert converted == dict(value)
 
 
 def test_is_collection_type(converter):
-
-	from collections import OrderedDict
-
 	types = [list, List, dict, Dict, Sequence, Mapping]
-
 	values = [[], [1, 2], range(3), dict(x=3), OrderedDict(), set()]
 
 	# Non-parametrized types, should mirror builtin isinstance()
