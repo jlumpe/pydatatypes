@@ -4,6 +4,7 @@ JSON conversion.
 """
 
 import typing
+from warnings import warn
 
 import attr
 
@@ -50,7 +51,7 @@ def field(type=None,
           default=attr.NOTHING,
           *,
           validator=None,
-          convert=None,
+          converter=None,
           metadata=None,
           optional=False,
           validate_type=True,
@@ -65,7 +66,7 @@ def field(type=None,
 		positional argument because it's commonly used.
 	:param default: Same as in :func:`attr.attrib`.
 	:param validator: Same as in :func:`attr.attrib`.
-	:param convert: Same as in :func:`attr.attrib`.
+	:param converter: Same as in :func:`attr.attrib`.
 	:param metadata: Same as in :func:`attr.attrib`.
 	:param bool optional: If True the field will also accept None as well as any
 		other valid values. In this case if the field is initialized with a
@@ -90,6 +91,13 @@ def field(type=None,
 		be turned into a proper :class:`attr.Attribute` by the
 		:func:`attr.attributes` function.
 	"""
+	# Deprecated argument - "convert" became "converter" in abbrib package
+	if 'convert' in kwargs:
+		cv = kwargs.pop('convert')
+		warn("The 'convert' argument is deprecated, use 'converter' instead.",
+		     DeprecationWarning)
+		if converter is None:
+			converter = cv
 
 	# Union type
 	if isinstance(type, tuple):
@@ -103,16 +111,16 @@ def field(type=None,
 			validator = validate_field_type
 
 	# Add type converter
-	if convert_type and not convert and type is not None:
-		convert = make_type_converter(type)
+	if convert_type and not converter and type is not None:
+		converter = make_type_converter(type)
 
 	# Fix validator, converter, and default for optional
 	if optional:
 		if validator is not None:
 			validator = attr.validators.optional(validator)
 
-		if convert is not None:
-			convert = attr.converters.optional(convert)
+		if converter is not None:
+			converter = attr.converters.optional(converter)
 
 		if default is attr.NOTHING and set_default_optional:
 			default = None
@@ -133,7 +141,7 @@ def field(type=None,
 		default=default,
 		validator=validator,
 		type=type,
-		convert=convert,
+		converter=converter,
 		metadata=metadata,
 		**kwargs,
 	)
@@ -350,4 +358,4 @@ def array_field(dtype=None, ndim=None, shape=None, **kwargs):
 
 		return value
 
-	return field(np.ndarray, convert=convert_array, metadata=metadata, **kwargs)
+	return field(np.ndarray, converter=convert_array, metadata=metadata, **kwargs)

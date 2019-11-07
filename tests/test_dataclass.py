@@ -92,7 +92,7 @@ def test_optional(other_validator, convert, default):
 			int,
 			optional=True,
 			validator=is_positive if other_validator else None,
-			convert=int if convert else None,
+			converter=int if convert else None,
 			default=default,
 		)
 
