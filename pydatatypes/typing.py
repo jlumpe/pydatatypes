@@ -454,26 +454,27 @@ class TypeConverter(_TypeHandler):
 
 		# Use cached handler if available
 		try:
-			handler = self._handler_cache[type_]
+			return self._handler_cache[type_]
 
-		# TypeError raised when value not weak-referencable, seems to only
-		# when mistakenly passed *instance* of builtin classes as the type
+		# typing.Any and typing.Union will fail here because they are not weak-referenceable
 		except TypeError:
-			raise TypeError('{!r} is not a valid type'.format(type_)) from None
+			can_cache = False
 
-		# Not available, get it
+		# Not yet created
 		except KeyError:
+			can_cache = True
 
-			# Get handler instance for type
-			handler = self._find_handler(type_)
+		# Get handler instance for type
+		handler = self._find_handler(type_)
 
-			# Default handler
-			if handler is None:
-				handler = self._get_handler_instance(_TrivialTypeHandler)
+		# Default handler
+		if handler is None:
+			handler = self._get_handler_instance(_TrivialTypeHandler)
 
-			assert type_ not in (list, dict)
+		assert type_ not in (list, dict)
 
-			# Add to cache
+		# Add to cache
+		if can_cache:
 			self._handler_cache[type_] = handler
 
 		return handler
