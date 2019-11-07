@@ -6,7 +6,7 @@ from collections import OrderedDict
 import pytest
 
 from pydatatypes.typing import TypeConversionError, NoneType
-from typingtesthelpers import assert_convert_success, assert_convert_failure
+from pydatatypes.test import assert_convert_success, assert_convert_failure
 
 
 # Quick examples for type checking and conversion (mutually exclusive partitions)
