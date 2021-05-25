@@ -168,6 +168,6 @@ class JsonConverter:
 # Default JsonConverter instance
 default_json_converter = JsonConverter(JsonTypeConverter())
 
-# Alises for default json converter methods
+# Aliases for default json converter methods
 to_json = default_json_converter.to_json
 from_json = default_json_converter.from_json

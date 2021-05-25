@@ -60,7 +60,7 @@ def field(type=None,
           set_default_optional=True,
           **kwargs
 	):
-	"""Slightly extended verions of :func:`attr.attrib`.
+	"""Slightly extended version of :func:`attr.attrib`.
 
 	:param type type: Same as in :func:`attr.attrib`. Just put it as first
 		positional argument because it's commonly used.
@@ -286,7 +286,7 @@ def dataclass_to_json(instance):
 
 
 def dataclass_from_json(cls, data, ignore_extra_keys=False):
-	"""Convert parsed JSON data to a dataobject instance.
+	"""Convert parsed JSON data to a dataclass instance.
 
 	:param type cls: Class modified by :func:`.dataclass`.
 	:param dict data: Parsed JSON data as returned by :func:`json.load`.
@@ -321,7 +321,7 @@ def array_field(dtype=None, ndim=None, shape=None, **kwargs):
 	:param dtype: Numpy dtype or value which can be converted to one.
 	:param int ndim: Expected number of dimensions of array.
 	:param tuple shape: Tuple of ints describing expected shape of array.
-		Dimesions with unspecified size can have a None in the corresponding
+		Dimensions with unspecified size can have a None in the corresponding
 		position.
 	:param \\**kwargs: Additional keyword arguments to pass to :func:`.field`.
 
