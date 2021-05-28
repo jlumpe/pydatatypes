@@ -1,6 +1,6 @@
 """Work with pseudo-statically-typed data structures."""
 
-from .version import __version__
+__version__ = '0.2'
 
 from .abc import *
 from .typing import *
