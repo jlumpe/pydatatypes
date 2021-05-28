@@ -3,7 +3,7 @@
 import typing
 from typing import Tuple, Union, Any
 from pydatatypes.typing import is_valid_annotation, is_generic_type, is_parameterized_type, \
-	is_structured_tuple_type, is_union_type, is_collection_type
+	is_structured_tuple_type, is_union_type, is_collection_type, issubclass_
 
 
 def test_is_valid_annotation():
@@ -68,3 +68,19 @@ def test_is_collection_type():
 	assert is_collection_type(typing.Mapping)
 	assert not is_collection_type(int)
 	assert not is_collection_type(Any)
+
+def test_issubclass_():
+	assert issubclass_(list, object)
+	assert issubclass_(list, typing.Sequence)
+	assert issubclass_(dict, typing.Mapping)
+	assert issubclass_(typing.List, typing.Sequence)
+	assert issubclass_(typing.List[int], typing.Sequence)
+	assert issubclass_(typing.Tuple, typing.Sequence)
+	assert issubclass_(typing.Tuple[int, str], typing.Sequence)
+	assert not issubclass_(typing.Sequence, list)
+	assert not issubclass_(int, typing.Iterable)
+	assert not issubclass_(typing.List, typing.Mapping)
+
+	# The following would error because one of the arguments isn't a type
+	assert not issubclass_(Any, typing.Iterable)
+	assert not issubclass_(Union, typing.Iterable)

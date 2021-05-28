@@ -56,6 +56,15 @@ class TypeConversionError(TypeError):
 			TypeError.__init__(self, msg)
 
 
+def issubclass_(t1, t2):
+	"""
+	Version of builtin ``issubclass`` but doesn't throw error when the first argument is not a class.
+	"""
+	if not isinstance(t1, type):
+		return False
+	return issubclass(t1, t2)
+
+
 def is_valid_annotation(x):
 	"""Check if argument is a value that can be used with a type annotation.
 
@@ -111,7 +120,7 @@ def is_structured_tuple_type(type_):
 	>>> is_structured_tuple_type(Tuple[int, ...])
 	False
 	"""
-	return issubclass(type_, typing.Tuple) and \
+	return issubclass_(type_, typing.Tuple) and \
 		type_.__args__ is not None and \
 		type_.__args__[-1] is not Ellipsis
 
@@ -152,10 +161,9 @@ def is_collection_type(type_):
 	>>> is_collection_type(type(generator))
 	False
 	"""
-	return isinstance(type_, type) and \
-		issubclass(type_, typing.Sized) and \
-		issubclass(type_, typing.Iterable) and \
-		issubclass(type_, typing.Container)
+	return issubclass_(type_, typing.Sized) and \
+		issubclass_(type_, typing.Iterable) and \
+		issubclass_(type_, typing.Container)
 
 
 class _TypeHandler:
@@ -536,11 +544,11 @@ class TypeConverter(_TypeHandler):
 			return self._find_generic_handler(type_)
 
 		# Numeric types
-		if not issubclass(type_, bool):
-			if issubclass(type_, numbers.Integral):
+		if not issubclass_(type_, bool):
+			if issubclass_(type_, numbers.Integral):
 				return self._get_handler_instance(_IntTypeHandler)
 
-			if issubclass(type_, numbers.Real):
+			if issubclass_(type_, numbers.Real):
 				return self._get_handler_instance(_FloatTypeHandler)
 
 		# Remaining are builtin scalar types or unknown types, don't do anything
@@ -557,11 +565,11 @@ class TypeConverter(_TypeHandler):
 			return self._find_tuple_handler(type_)
 
 		# Mapping
-		if issubclass(base, typing.Mapping):
+		if issubclass_(base, typing.Mapping):
 			return self._find_mapping_handler(type_)
 
 		# Sequence
-		if issubclass(base, typing.Sequence):
+		if issubclass_(base, typing.Sequence):
 			return self._find_sequence_handler(type_)
 
 		# Other collection type
