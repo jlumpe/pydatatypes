@@ -61,7 +61,7 @@ def is_parameterized_type(type_):
 	Check if a type object is a parameterized generic type from the
 	``typing`` module.
 
-	:type type_: type
+	param type_: Type object to check.
 	:rtype: bool
 
 	>>> from typing import List
@@ -77,10 +77,10 @@ def is_parameterized_type(type_):
 
 def is_structured_tuple_type(type_):
 	"""
-	Check if a type object is a structured (non-homogenous) version of
+	Check if a type object is a structured (non-variadic) version of
 	:class:`typing.Tuple`.
 
-	:type type_: type
+	param type_: Type object to check.
 	:rtype: bool
 
 	>>> from typing import Tuple
@@ -99,8 +99,7 @@ def is_structured_tuple_type(type_):
 def is_union_type(type_):
 	"""Check if a type is :data:`typing.Union` or a parameterized version of it.
 
-	param type_: Type object to check (but positives won't actually be instance
-		of :class:`type`, confusing).
+	param type_: Type object to check.
 	:type: bool
 
 	>>> from typing import Union
