@@ -133,7 +133,8 @@ def is_collection_type(type_):
 	>>> is_collection_type(type(generator))
 	False
 	"""
-	return issubclass(type_, typing.Sized) and \
+	return isinstance(type_, type) and \
+		issubclass(type_, typing.Sized) and \
 		issubclass(type_, typing.Iterable) and \
 		issubclass(type_, typing.Container)
 
