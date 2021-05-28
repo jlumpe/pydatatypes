@@ -56,6 +56,26 @@ class TypeConversionError(TypeError):
 			TypeError.__init__(self, msg)
 
 
+def is_valid_annotation(x):
+	"""Check if argument is a value that can be used with a type annotation.
+
+	param x: Type object to check.
+	:rtype: bool
+	"""
+	return isinstance(x, (type, typing._TypingBase))
+
+
+def is_generic_type(type_):
+	"""Check if the given type is a generic type (parameters may be specified or not).
+
+	Tuple and Union types are excluded.
+
+	param type_: Type object to check.
+	:rtype: bool
+	"""
+	return isinstance(type_, type) and typing.Generic in type_.__mro__  # Don't all support issubclass()
+
+
 def is_parameterized_type(type_):
 	"""
 	Check if a type object is a parameterized generic type from the
@@ -502,21 +522,17 @@ class TypeConverter(_TypeHandler):
 			could be found and most generic default should be used (happens for
 			all builtin and unknown types).
 		"""
+		if not is_valid_annotation(type_):
+			raise TypeError('%r is not a valid type annotation' % type_)
 
-		# typing.Any not a type, for some reason
 		if type_ == typing.Any:
 			return self._get_handler_instance(_AnyTypeHandler)
 
-		# Unions also not instance of type
 		if is_union_type(type_):
 			return self._get_handler_instance(_UnionTypeHandler)
 
-		# From here on, should be a type
-		if not isinstance(type_, type):
-			raise TypeError('Expect type_ to be instance of type, Any, or Union')
-
 		# Generic types from typing module
-		if typing.Generic in type_.__mro__:  # Don't all support issubclass()
+		if is_generic_type(type_):
 			return self._find_generic_handler(type_)
 
 		# Numeric types
