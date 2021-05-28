@@ -1,6 +1,6 @@
 """
 Work with the built-in :mod:`typing` module, specifically to convert to or
-check membership of generic parametrized types like ``List[float]`` or
+check membership of generic parameterized types like ``List[float]`` or
 ``Mapping[str, int]``.
 
 Most class conversions are not actually implemented, objects already of the
@@ -56,20 +56,20 @@ class TypeConversionError(TypeError):
 			TypeError.__init__(self, msg)
 
 
-def is_parametrized_type(type_):
+def is_parameterized_type(type_):
 	"""
-	Check if a type object is a parametrized generic type from the
+	Check if a type object is a parameterized generic type from the
 	``typing`` module.
 
 	:type type_: type
 	:rtype: bool
 
 	>>> from typing import List
-	>>> is_parametrized_type(List[int])
+	>>> is_parameterized_type(List[int])
 	True
-	>>> is_parametrized_type(List)
+	>>> is_parameterized_type(List)
 	False
-	>>> is_parametrized_type(list)
+	>>> is_parameterized_type(list)
 	False
 	"""
 	return isinstance(type_, typing.GenericMeta) and type_.__args__ is not None
@@ -97,7 +97,7 @@ def is_structured_tuple_type(type_):
 
 
 def is_union_type(type_):
-	"""Check if a type is :data:`typing.Union` or a parametrized version of it.
+	"""Check if a type is :data:`typing.Union` or a parameterized version of it.
 
 	param type_: Type object to check (but positives won't actually be instance
 		of :class:`type`, confusing).
@@ -245,7 +245,7 @@ class _UnionTypeHandler(_TypeHandler):
 
 
 class _MappingTypeHandler(_TypeHandler):
-	"""Parametrized subclass of :class:`typing.Mapping`."""
+	"""parameterized subclass of :class:`typing.Mapping`."""
 
 	def isinstance(self, value, type_, path):
 		base = type_.__origin__ or type_
@@ -254,11 +254,11 @@ class _MappingTypeHandler(_TypeHandler):
 			return False
 
 		if type_.__args__ is not None:
-			return self._isinstance_parametrized(value, type_, path)
+			return self._isinstance_parameterized(value, type_, path)
 
 		return True
 
-	def _isinstance_parametrized(self, value, type_, path):
+	def _isinstance_parameterized(self, value, type_, path):
 		keytype, valtype = type_.__args__
 
 		for k, v in value.items():
@@ -292,9 +292,9 @@ class _DictTypeHandler(_MappingTypeHandler):
 				return dict(value)
 
 		else:
-			return self._convert_parametrized(value, type_, path)
+			return self._convert_parameterized(value, type_, path)
 
-	def _convert_parametrized(self, value, type_, path):
+	def _convert_parameterized(self, value, type_, path):
 		keytype, valtype = type_.__args__
 
 		converted = dict()
@@ -320,11 +320,11 @@ class _CollectionTypeHandler(_TypeHandler):
 			return False
 
 		if type_.__args__ is not None:
-			return self._isinstance_parametrized(self, value, type_, path)
+			return self._isinstance_parameterized(self, value, type_, path)
 
 		return True
 
-	def _isinstance_parametrized(self, value, type_, path):
+	def _isinstance_parameterized(self, value, type_, path):
 		elemtype, = type_.__args__
 
 		for i, elem in enumerate(value):
@@ -336,7 +336,7 @@ class _CollectionTypeHandler(_TypeHandler):
 
 
 class _ListTypeHandler(_CollectionTypeHandler):
-	"""Parametrized subclass of :class:`typing.Sequence` and superclass of list.
+	"""parameterized subclass of :class:`typing.Sequence` and superclass of list.
 
 	Allows conversion of any non-string sequence type to a dict, as long as
 	its elements can be converted.
@@ -355,9 +355,9 @@ class _ListTypeHandler(_CollectionTypeHandler):
 				return list(value)
 
 		else:
-			return self._convert_parametrized(value, type_, path)
+			return self._convert_parameterized(value, type_, path)
 
-	def _convert_parametrized(self, value, type_, path):
+	def _convert_parameterized(self, value, type_, path):
 		elemtype, = type_.__args__
 
 		converted = list()
@@ -375,7 +375,7 @@ class TypeConverter(_TypeHandler):
 	Object which handles conversion to and type checking for advanced generic
 	types from the built-in :mod:`typing` module.
 
-	Checks and converts parametrized types recursively.
+	Checks and converts parameterized types recursively.
 	"""
 
 	def __init__(self):
@@ -564,11 +564,11 @@ class TypeConverter(_TypeHandler):
 		if is_structured_tuple_type(base):
 			raise NotImplementedError('Structured Tuple[] types not implemented')
 
-		# Homogeneous parametrized tuple
+		# Homogeneous parameterized tuple
 		if issubclass(base, typing.Tuple) and type_.__args__:
 			raise NotImplementedError('Homogeneous Tuple[] types not implemented')
 
-		# Non-parametrized tuple
+		# Non-parameterized tuple
 		return None
 
 	def _find_mapping_handler(self, type_):
@@ -580,7 +580,7 @@ class TypeConverter(_TypeHandler):
 		if issubclass(dict, base):
 			return self._get_handler_instance(_DictTypeHandler)
 
-		# Parametrized mappings not compatible with dict
+		# parameterized mappings not compatible with dict
 		if type_.__args__:
 			return self._get_handler_instance(_MappingTypeHandler)
 
@@ -595,7 +595,7 @@ class TypeConverter(_TypeHandler):
 		if issubclass(list, base):
 			return self._get_handler_instance(_ListTypeHandler)
 
-		# Treat other parametrized sequences as generic collection types
+		# Treat other parameterized sequences as generic collection types
 		# because we can't convert and ordering doesn't matter for checking
 		# items
 		if type_.__args__:
@@ -609,7 +609,7 @@ class TypeConverter(_TypeHandler):
 		mapping or sequence.
 		"""
 
-		# Parametrized collections
+		# parameterized collections
 		if type_.__args__:
 			return self._get_handler_instance(_CollectionTypeHandler)
 
