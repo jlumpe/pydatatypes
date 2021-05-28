@@ -32,6 +32,7 @@ The following conversions are implemented:
 	:data:`.default_converter`.
 """
 
+import sys
 import typing
 import numbers
 from weakref import WeakKeyDictionary
@@ -56,10 +57,28 @@ class TypeConversionError(TypeError):
 			TypeError.__init__(self, msg)
 
 
+def _is_py37():
+	"""
+	Check if python version is 3.7 or above.
+
+	This is relevant because the typing module was significantly reworked in 3.7.
+	"""
+	return sys.version_info[1] >= 7
+
+def _is_generic_py37(type_, origin=None):
+	"""
+	In Python >= 3.7, checks if ``type`` is an instance of ``typing._GenericAlias`` and optionally
+	if its ``__origin__`` attribute matches ``origin``.
+	"""
+	return isinstance(type_, typing._GenericAlias) and (origin is None or type_.__origin__ is origin)
+
+
 def issubclass_(t1, t2):
 	"""
 	Version of builtin ``issubclass`` but doesn't throw error when the first argument is not a class.
 	"""
+	if _is_py37() and _is_generic_py37(t1):
+		t1 = t1.__origin__
 	if not isinstance(t1, type):
 		return False
 	return issubclass(t1, t2)
@@ -71,7 +90,10 @@ def is_valid_annotation(x):
 	param x: Type object to check.
 	:rtype: bool
 	"""
-	return isinstance(x, (type, typing._TypingBase))
+	if _is_py37():
+		return isinstance(x, (type, typing._Final))  # This isn't quite right but works
+	else:
+		return isinstance(x, (type, typing._TypingBase))
 
 
 def is_generic_type(type_):
@@ -82,7 +104,10 @@ def is_generic_type(type_):
 	param type_: Type object to check.
 	:rtype: bool
 	"""
-	return isinstance(type_, type) and typing.Generic in type_.__mro__  # Don't all support issubclass()
+	if _is_py37():
+		return _is_generic_py37(type_) and not is_union_type(type_) and not _is_generic_py37(type_, tuple)
+	else:
+		return isinstance(type_, type) and typing.Generic in type_.__mro__  # Don't all support issubclass()
 
 
 def is_parameterized_type(type_):
@@ -101,7 +126,12 @@ def is_parameterized_type(type_):
 	>>> is_parameterized_type(list)
 	False
 	"""
-	return isinstance(type_, typing.GenericMeta) and type_.__args__ is not None
+	if _is_py37():
+		return _is_generic_py37(type_) and \
+			not is_union_type(type_) and \
+			not any(isinstance(a, typing.TypeVar) for a in type_.__args__)
+	else:
+		return isinstance(type_, typing.GenericMeta) and type_.__args__ is not None
 
 
 def is_structured_tuple_type(type_):
@@ -120,9 +150,14 @@ def is_structured_tuple_type(type_):
 	>>> is_structured_tuple_type(Tuple[int, ...])
 	False
 	"""
-	return issubclass_(type_, typing.Tuple) and \
-		type_.__args__ is not None and \
-		type_.__args__[-1] is not Ellipsis
+	if _is_py37():
+		return _is_generic_py37(type_, tuple) and \
+		       type_.__args__ != () and \
+		       type_.__args__[-1] is not Ellipsis
+	else:
+		return issubclass_(type_, typing.Tuple) and \
+			type_.__args__ is not None and \
+			type_.__args__[-1] is not Ellipsis
 
 
 def is_union_type(type_):
@@ -141,7 +176,10 @@ def is_union_type(type_):
 	>>> is_union_type(int)
 	False
 	"""
-	return isinstance(type_, type(typing.Union))
+	if _is_py37():
+		return type_ is typing.Union or _is_generic_py37(type_, typing.Union)
+	else:
+		return isinstance(type_, type(typing.Union))
 
 
 def is_collection_type(type_):
